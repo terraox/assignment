@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../components/ui/dialog';
+import EmployeeProfileModal from '../components/dashboard/EmployeeProfileModal';
 
 interface Employee {
   id: number;
@@ -51,6 +52,7 @@ export default function Employees() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [viewEmployeeId, setViewEmployeeId] = useState<number | null>(null);
 
   const {
     register,
@@ -102,8 +104,16 @@ export default function Employees() {
       cell: (props) => (
         <div className="flex gap-2">
           <button
+            onClick={() => setViewEmployeeId(props.row.original.id)}
+            className="p-2 text-ink-muted hover:text-primary transition-colors rounded-md hover:bg-surface-2"
+            title="View Profile"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button
             onClick={() => openModal(props.row.original)}
             className="p-2 text-ink-muted hover:text-primary transition-colors rounded-md hover:bg-surface-2"
+            title="Edit Employee"
           >
             <Edit2 className="w-4 h-4" />
           </button>
@@ -113,6 +123,7 @@ export default function Employees() {
               setIsDeleteOpen(true);
             }}
             className="p-2 text-ink-muted hover:text-danger transition-colors rounded-md hover:bg-surface-2"
+            title="Delete Employee"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -333,6 +344,12 @@ export default function Employees() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <EmployeeProfileModal 
+        employeeId={viewEmployeeId} 
+        isOpen={viewEmployeeId !== null} 
+        onClose={() => setViewEmployeeId(null)} 
+      />
     </div>
   );
 }
