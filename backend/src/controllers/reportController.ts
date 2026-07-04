@@ -1,0 +1,76 @@
+import { Response } from 'express';
+import { AuthRequest } from '../middlewares/authMiddleware';
+import pool from '../config/db';
+import { RowDataPacket } from 'mysql2';
+import exceljs from 'exceljs';
+import { Parser } from 'json2csv';
+import { TaskModel } from '../models/Task';
+
+export const exportTasks = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const format = req.query.format as string || 'csv';
+    const userRole = req.user?.role;
+    const userId = req.user?.id;
+
+    let query = `
+      SELECT t.id, t.title, t.priority, t.status, t.start_date, t.due_date, u.name as assigned_to
+      FROM tasks t
+      LEFT JOIN employees e ON t.assigned_employee_id = e.id
+      LEFT JOIN users u ON e.user_id = u.id
+    `;
+    const params: any[] = [];
+
+    if (userRole === 'Employee') {
+      const empId = await TaskModel.getEmployeeIdByUserId(userId!);
+      query += ` WHERE t.assigned_employee_id = ?`;
+      params.push(empId);
+    }
+    
+    query += ` ORDER BY t.due_date ASC`;
+
+    const [rows] = await pool.query<RowDataPacket[]>(query, params);
+    
+    // Format dates to string for better export
+    const data = rows.map(row => ({
+      ...row,
+      start_date: new Date(row.start_date).toLocaleDateString(),
+      due_date: new Date(row.due_date).toLocaleDateString()
+    }));
+
+    if (format === 'excel') {
+      const workbook = new exceljs.Workbook();
+      const worksheet = workbook.addWorksheet('Tasks Report');
+      
+      worksheet.columns = [
+        { header: 'ID', key: 'id', width: 10 },
+        { header: 'Title', key: 'title', width: 30 },
+        { header: 'Priority', key: 'priority', width: 15 },
+        { header: 'Status', key: 'status', width: 15 },
+        { header: 'Start Date', key: 'start_date', width: 15 },
+        { header: 'Due Date', key: 'due_date', width: 15 },
+        { header: 'Assigned To', key: 'assigned_to', width: 25 },
+      ];
+
+      worksheet.addRows(data);
+
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename=tasks_report.xlsx');
+      
+      await workbook.xlsx.write(res);
+      res.end();
+
+    } else {
+      // Default to CSV
+      const fields = ['id', 'title', 'priority', 'status', 'start_date', 'due_date', 'assigned_to'];
+      const json2csvParser = new Parser({ fields });
+      const csv = json2csvParser.parse(data);
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=tasks_report.csv');
+      res.status(200).send(csv);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error during export' });
+  }
+};

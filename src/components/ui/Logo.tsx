@@ -1,0 +1,19 @@
+import React from 'react';
+
+export const Logo = ({ className }: { className?: string }) => (
+  <svg 
+    className={className} 
+    width="100%" 
+    height="100%" 
+    viewBox="0 0 64 64" 
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Three task columns, ascending — the tallest breaks free as an arrow (momentum / completion) */}
+    <rect x="6" y="36" width="11" height="16" rx="2" fill="#71717A"/>
+    <rect x="23" y="24" width="11" height="28" rx="2" fill="#A1A1AA"/>
+    <rect x="40" y="20" width="11" height="32" rx="2" fill="#F4F4F5"/>
+
+    {/* Arrow breaking out from the third column, pointing up-right */}
+    <path d="M40 20 L45.5 6 L51 20 L47.5 20 L47.5 26 L43.5 26 L43.5 20 Z" fill="#5E6AD2"/>
+  </svg>
+);

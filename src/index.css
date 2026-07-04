@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #010102;
+  --color-surface-1: #0f1011;
+  --color-surface-2: #141516;
+  --color-surface-3: #18191a;
+  --color-surface-4: #191a1b;
+  --color-hairline: #23252a;
+  --color-hairline-strong: #34343a;
+  --color-hairline-tertiary: #3e3e44;
+  
+  --color-ink: #f7f8f8;
+  --color-ink-muted: #d0d6e0;
+  --color-ink-subtle: #8a8f98;
+  --color-ink-tertiary: #62666d;
+  
+  --color-primary: #5e6ad2;
+  --color-primary-hover: #828fff;
+  --color-primary-focus: #5e69d1;
+  
+  --color-success: #27a644;
+  --color-warning: #e5a03e;
+  --color-danger: #eb5757;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'ui-monospace', monospace;
+  
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-xxl: 24px;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  
+  body {
+    @apply bg-canvas text-ink font-sans antialiased selection:bg-primary/30;
+  }
+
+  /* Typography utilities for Linear's tight tracking */
+  .tracking-display-xl { letter-spacing: -3.0px; }
+  .tracking-display-lg { letter-spacing: -1.8px; }
+  .tracking-display-md { letter-spacing: -1.0px; }
+  .tracking-headline { letter-spacing: -0.6px; }
+  .tracking-body { letter-spacing: -0.05px; }
+  .tracking-eyebrow { letter-spacing: 0.4px; }
+}
+
+@layer components {
+  /* Surface Layers */
+  .surface-0 {
+    @apply bg-canvas;
+  }
+  .surface-1 {
+    @apply bg-surface-1 border border-hairline;
+  }
+  .surface-2 {
+    @apply bg-surface-2 border border-hairline-strong;
+  }
+
+  /* Buttons */
+  .btn, .btn-primary, .btn-secondary, .btn-tertiary {
+    @apply inline-flex items-center justify-center font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-hover active:bg-primary-focus px-[14px] py-[8px] text-[14px] leading-[1.2];
+  }
+  .btn-secondary {
+    @apply bg-surface-1 text-ink border border-hairline hover:bg-surface-2 px-[14px] py-[8px] text-[14px] leading-[1.2];
+  }
+  .btn-tertiary {
+    @apply bg-transparent text-ink hover:bg-surface-1 px-[14px] py-[8px] text-[14px] leading-[1.2];
+  }
+
+  /* Inputs */
+  .input {
+    @apply flex h-10 w-full rounded-md border border-hairline bg-surface-1 px-[12px] py-[8px] text-[14px] text-ink transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-ink-subtle focus-visible:outline-none focus-visible:border-primary-focus disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Status Badges */
+  .badge, .badge-neutral, .badge-success, .badge-warning, .badge-danger {
+    @apply inline-flex items-center rounded-full border border-transparent px-2 py-0.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+  .badge-neutral {
+    @apply bg-surface-2 text-ink-muted;
+  }
+  .badge-success {
+    @apply bg-success/20 text-success border-success/30;
+  }
+  .badge-warning {
+    @apply bg-warning/20 text-warning border-warning/30;
+  }
+  .badge-danger {
+    @apply bg-danger/20 text-danger border-danger/30;
+  }
+}
