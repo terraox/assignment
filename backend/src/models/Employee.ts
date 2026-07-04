@@ -17,6 +17,7 @@ interface FetchOptions {
   sortOrder?: 'ASC' | 'DESC';
   page?: number;
   limit?: number;
+  department?: string;
 }
 
 export class EmployeeModel {
@@ -26,7 +27,8 @@ export class EmployeeModel {
       sortBy = 'e.id',
       sortOrder = 'DESC',
       page = 1,
-      limit = 10
+      limit = 10,
+      department
     } = options;
 
     const offset = (page - 1) * limit;
@@ -43,13 +45,23 @@ export class EmployeeModel {
     `;
 
     const queryParams: any[] = [];
+    const whereClauses: string[] = [];
 
     if (search) {
+      whereClauses.push(`(u.name LIKE ? OR u.email LIKE ? OR e.department LIKE ?)`);
       const searchStr = `%${search}%`;
-      const searchClause = ` WHERE u.name LIKE ? OR u.email LIKE ? OR e.department LIKE ?`;
-      baseQuery += searchClause;
-      countQuery += searchClause;
       queryParams.push(searchStr, searchStr, searchStr);
+    }
+
+    if (department) {
+      whereClauses.push(`e.department = ?`);
+      queryParams.push(department);
+    }
+
+    if (whereClauses.length > 0) {
+      const whereString = ` WHERE ${whereClauses.join(' AND ')}`;
+      baseQuery += whereString;
+      countQuery += whereString;
     }
 
     // Add sorting (using string interpolation for order by is safe if we strictly validate sortBy beforehand)
@@ -112,5 +124,10 @@ export class EmployeeModel {
       [id]
     );
     return result.affectedRows > 0;
+  }
+
+  static async getDistinctDepartments(): Promise<string[]> {
+    const [rows] = await pool.query<RowDataPacket[]>('SELECT DISTINCT department FROM employees WHERE department IS NOT NULL AND department != "" ORDER BY department ASC');
+    return rows.map(r => r.department);
   }
 }

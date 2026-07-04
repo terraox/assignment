@@ -23,6 +23,13 @@
   --color-warning: #e5a03e;
   --color-danger: #eb5757;
 
+  /* Rainbow Button Colors */
+  --color-1: hsl(0, 100%, 63%);
+  --color-2: hsl(270, 100%, 63%);
+  --color-3: hsl(210, 100%, 63%);
+  --color-4: hsl(195, 100%, 63%);
+  --color-5: hsl(90, 100%, 63%);
+
   --color-spendings: var(--chart-1);
   --color-sales: var(--chart-2);
   --color-coffee: var(--chart-3);
@@ -41,6 +48,17 @@
   --animate-marquee-up: marquee-up 6s ease-in-out infinite;
   --animate-marquee-down: marquee-down 6s ease-in-out infinite;
   --animate-marquee-pulse: marquee-pulse 3s ease-in-out infinite;
+  
+  --animate-rainbow: rainbow var(--speed, 2s) infinite linear;
+
+  @keyframes rainbow {
+    0% {
+      background-position: 0%;
+    }
+    100% {
+      background-position: 200%;
+    }
+  }
 }
 
 @layer base {

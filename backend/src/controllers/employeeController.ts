@@ -24,6 +24,7 @@ const validSortColumns = ['name', 'email', 'department', 'designation', 'created
 export const getEmployees = async (req: Request, res: Response): Promise<void> => {
   try {
     const search = req.query.search as string || '';
+    const department = req.query.department as string || undefined;
     let sortBy = req.query.sortBy as string || 'e.id';
     const sortOrder = (req.query.sortOrder as string)?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
     const page = parseInt(req.query.page as string) || 1;
@@ -37,8 +38,18 @@ export const getEmployees = async (req: Request, res: Response): Promise<void> =
       sortBy = 'e.id';
     }
 
-    const result = await EmployeeModel.findAll({ search, sortBy, sortOrder, page, limit });
+    const result = await EmployeeModel.findAll({ search, department, sortBy, sortOrder, page, limit });
     res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getDepartments = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const departments = await EmployeeModel.getDistinctDepartments();
+    res.json(departments);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

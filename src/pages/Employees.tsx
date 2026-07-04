@@ -5,7 +5,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Edit2, Trash2, Plus, Search } from 'lucide-react';
+import { Edit2, Trash2, Plus, Search, ArrowDownAZ, ArrowUpZA, List, RefreshCw } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -43,33 +43,55 @@ export default function Employees() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // Pagination & Sorting State
+  // Pagination, Sorting & Filtering State
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<'pagination' | 'infinite'>('pagination');
+  const [departmentFilter, setDepartmentFilter] = useState('All');
+  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('ASC');
+  const [departments, setDepartments] = useState<string[]>([]);
   
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [viewEmployeeId, setViewEmployeeId] = useState<number | null>(null);
+  const [isCreatingDepartment, setIsCreatingDepartment] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),
   });
 
-  const fetchEmployees = async () => {
+  useEffect(() => {
+    api.get('/departments').then(res => setDepartments(res.data)).catch(console.error);
+  }, []);
+
+  const fetchEmployees = async (pageNum: number) => {
     setLoading(true);
     try {
       const res = await api.get('/employees', {
-        params: { page, limit, search },
+        params: { 
+          page: pageNum, 
+          limit, 
+          search,
+          department: departmentFilter !== 'All' ? departmentFilter : undefined,
+          sortBy: 'name',
+          sortOrder
+        },
       });
-      setData(res.data.data);
+      
+      if (viewMode === 'infinite' && pageNum > 1) {
+        setData(prev => [...prev, ...res.data.data]);
+      } else {
+        setData(res.data.data);
+      }
       setTotal(res.data.total);
     } catch (error) {
       console.error('Failed to fetch employees', error);
@@ -79,8 +101,17 @@ export default function Employees() {
   };
 
   useEffect(() => {
-    fetchEmployees();
-  }, [page, search]);
+    setPage(1);
+    fetchEmployees(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, limit, viewMode, departmentFilter, sortOrder]);
+
+  useEffect(() => {
+    if (page > 1) {
+      fetchEmployees(page);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
   const columnHelper = createColumnHelper<Employee>();
   const columns = [
@@ -193,18 +224,84 @@ export default function Employees() {
         </button>
       </div>
 
-      <div className="surface-1 rounded-xl border border-surface-3 overflow-hidden">
-        <div className="p-4 border-b border-surface-3 flex justify-between items-center bg-surface-1">
+      <div className="glass-card p-4 mb-6 flex flex-col md:flex-row items-start md:items-center gap-6 justify-between rounded-xl">
+        <div className="flex flex-wrap items-center gap-6 w-full">
+          
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
             <input
               type="text"
-              placeholder="Search employees..."
+              placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="input pl-9 w-64 bg-surface-2 border-transparent focus:bg-canvas focus:border-primary"
+              className="bg-surface-2 border border-hairline-strong rounded-lg h-9 text-xs pl-9 pr-3 w-[180px] text-ink shadow-sm focus:outline-none focus:border-primary transition-colors"
             />
           </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Dept</span>
+            <select 
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+              className="bg-surface-2 border border-hairline-strong rounded-lg h-9 text-xs px-3 text-ink shadow-sm focus:outline-none focus:border-primary transition-colors"
+            >
+              <option value="All">All Departments</option>
+              {departments.map(dep => (
+                <option key={dep} value={dep}>{dep}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Sort Name</span>
+            <button
+              onClick={() => setSortOrder(prev => prev === 'ASC' ? 'DESC' : 'ASC')}
+              className="bg-surface-2 hover:bg-surface-3 border border-hairline-strong rounded-lg h-9 px-3 flex items-center gap-2 text-xs font-medium text-ink shadow-sm transition-colors"
+            >
+              {sortOrder === 'ASC' ? <ArrowDownAZ className="w-4 h-4 text-primary" /> : <ArrowUpZA className="w-4 h-4 text-primary" />}
+              {sortOrder === 'ASC' ? 'A to Z' : 'Z to A'}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3 ml-auto">
+            <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">View Mode</span>
+            <div className="flex bg-surface-2 p-1 rounded-lg border border-hairline">
+              <button 
+                onClick={() => setViewMode('pagination')}
+                className={`px-3 py-1.5 text-xs rounded-md transition-all flex items-center gap-2 ${viewMode === 'pagination' ? 'bg-white text-canvas font-bold shadow-sm' : 'text-ink-muted font-medium hover:text-ink hover:bg-surface-3/50'}`}
+              >
+                <List className="w-3.5 h-3.5" /> Pages
+              </button>
+              <button 
+                onClick={() => setViewMode('infinite')}
+                className={`px-3 py-1.5 text-xs rounded-md transition-all flex items-center gap-2 ${viewMode === 'infinite' ? 'bg-white text-canvas font-bold shadow-sm' : 'text-ink-muted font-medium hover:text-ink hover:bg-surface-3/50'}`}
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> Infinite
+              </button>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+
+      <div className="surface-1 rounded-xl border border-surface-3 overflow-hidden">
+        <div className="p-4 border-b border-surface-3 flex justify-between items-center bg-surface-1">
+          <h2 className="text-sm font-semibold text-ink">Employee Directory</h2>
+          
+          {viewMode === 'pagination' && (
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-ink-muted">Rows per page:</span>
+              <select
+                value={limit}
+                onChange={(e) => setLimit(Number(e.target.value))}
+                className="bg-surface-2 border border-hairline-strong rounded-md text-xs py-1 px-2 text-ink focus:outline-none"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="overflow-x-auto">
@@ -251,28 +348,42 @@ export default function Employees() {
           </table>
         </div>
 
-        {/* Pagination */}
-        <div className="p-4 border-t border-surface-3 flex items-center justify-between bg-surface-1">
-          <div className="text-sm text-ink-muted">
-            Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, total)} of {total} results
+        {/* Footer / Pagination / Infinite Scroll */}
+        {viewMode === 'pagination' ? (
+          <div className="p-4 border-t border-surface-3 flex items-center justify-between bg-surface-1">
+            <div className="text-sm text-ink-muted">
+              Showing {data.length === 0 ? 0 : ((page - 1) * limit) + 1} to {Math.min(page * limit, total)} of {total} results
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="btn-secondary px-3 py-1 text-sm disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages || totalPages === 0}
+                className="btn-secondary px-3 py-1 text-sm disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="btn-secondary px-3 py-1 text-sm disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages || totalPages === 0}
-              className="btn-secondary px-3 py-1 text-sm disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        </div>
+        ) : (
+          data.length < total && (
+            <div className="p-4 border-t border-surface-3 flex justify-center bg-surface-1">
+              <button 
+                onClick={() => setPage(p => p + 1)}
+                disabled={loading}
+                className="btn-secondary text-sm px-6"
+              >
+                {loading ? 'Loading...' : 'Load More Employees'}
+              </button>
+            </div>
+          )
+        )}
       </div>
 
       {/* Add/Edit Modal */}
@@ -301,8 +412,30 @@ export default function Employees() {
             )}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-ink-muted mb-1">Department</label>
-                <input type="text" {...register('department')} className="input" />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-ink-muted">Department</label>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setIsCreatingDepartment(!isCreatingDepartment);
+                      // Clear the value when switching so it doesn't hold an invalid selection
+                      reset({ ...getValues(), department: '' });
+                    }}
+                    className="text-xs font-semibold text-primary hover:text-primary-hover"
+                  >
+                    {isCreatingDepartment ? 'Select Existing' : '+ Create New'}
+                  </button>
+                </div>
+                {isCreatingDepartment ? (
+                  <input type="text" {...register('department')} className="input" placeholder="Type new department name" />
+                ) : (
+                  <select {...register('department')} className="input">
+                    <option value="">Select department...</option>
+                    {departments.map(dep => (
+                      <option key={dep} value={dep}>{dep}</option>
+                    ))}
+                  </select>
+                )}
                 {errors.department && <p className="text-danger text-xs mt-1">{errors.department.message}</p>}
               </div>
               <div>

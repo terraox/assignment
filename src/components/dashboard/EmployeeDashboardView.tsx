@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
 import { format, isBefore, isEqual } from 'date-fns';
-import { Mail, Briefcase, Clock, CheckCircle2, Calendar, AlertCircle, ChevronDown, Loader2 } from 'lucide-react';
+import { Mail, Briefcase, Clock, CheckCircle2, Calendar, AlertCircle, ChevronDown, Loader2, Paperclip, UploadCloud } from 'lucide-react';
 import NumberFlow from '@number-flow/react';
 import api from '../../utils/api';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { useDropzone } from 'react-dropzone';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../ui/dialog';
 
 interface EmployeeDashboardViewProps {
   stats: any;
@@ -12,6 +19,23 @@ interface EmployeeDashboardViewProps {
 
 export default function EmployeeDashboardView({ stats, onRefresh }: EmployeeDashboardViewProps) {
   const [updatingTaskId, setUpdatingTaskId] = useState<number | null>(null);
+  
+  // File Upload State
+  const [completeModalOpen, setCompleteModalOpen] = useState(false);
+  const [selectedTaskForCompletion, setSelectedTaskForCompletion] = useState<number | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: (acceptedFiles) => setSelectedFile(acceptedFiles[0]),
+    maxFiles: 1,
+    maxSize: 5 * 1024 * 1024,
+    accept: {
+      'application/pdf': ['.pdf'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png']
+    }
+  });
 
   if (!stats || !stats.employee) {
     return (
@@ -33,6 +57,30 @@ export default function EmployeeDashboardView({ stats, onRefresh }: EmployeeDash
       alert('Failed to update status.');
     } finally {
       setUpdatingTaskId(null);
+    }
+  };
+
+  const handleCompleteWithFile = async () => {
+    if (!selectedTaskForCompletion) return;
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append('status', 'Completed');
+      if (selectedFile) {
+        formData.append('file', selectedFile);
+      }
+      
+      await api.put(`/tasks/${selectedTaskForCompletion}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setCompleteModalOpen(false);
+      onRefresh();
+    } catch (error) {
+      console.error('Failed to complete task', error);
+      alert('Failed to complete task.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -123,7 +171,14 @@ export default function EmployeeDashboardView({ stats, onRefresh }: EmployeeDash
                 return (
                   <div key={task.id} className="p-5 rounded-2xl bg-surface-2/50 border border-hairline/50 hover:bg-surface-2 transition-colors">
                     <div className="flex items-start justify-between gap-4 mb-3">
-                      <h4 className="text-base font-semibold text-ink leading-tight flex-1">{task.title}</h4>
+                      <div className="flex items-center gap-2 flex-1">
+                        <h4 className="text-base font-semibold text-ink leading-tight">{task.title}</h4>
+                        {task.file_path && (
+                          <a href={`http://localhost:5001${task.file_path}`} target="_blank" rel="noreferrer" className="text-primary hover:text-primary-hover transition-colors" title="View Attachment">
+                            <Paperclip className="w-4 h-4" />
+                          </a>
+                        )}
+                      </div>
                       
                       <DropdownMenu.Root>
                         <DropdownMenu.Trigger asChild disabled={isUpdating}>
@@ -156,7 +211,11 @@ export default function EmployeeDashboardView({ stats, onRefresh }: EmployeeDash
                             </DropdownMenu.Item>
                             <DropdownMenu.Separator className="h-px bg-hairline/50 my-1 mx-2" />
                             <DropdownMenu.Item 
-                              onClick={() => handleStatusUpdate(task.id, 'Completed')}
+                              onClick={() => {
+                                setSelectedTaskForCompletion(task.id);
+                                setSelectedFile(null);
+                                setCompleteModalOpen(true);
+                              }}
                               className="text-sm font-medium text-success hover:bg-success/10 px-3 py-2 rounded-lg cursor-pointer outline-none flex items-center justify-between"
                             >
                               Mark Completed
@@ -220,12 +279,19 @@ export default function EmployeeDashboardView({ stats, onRefresh }: EmployeeDash
                       
                       <div className="ml-6 flex-1 bg-surface-1 p-4 rounded-xl border border-hairline/50 hover:bg-surface-2 transition-colors">
                         <div className="flex items-center justify-between mb-2">
-                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                            isCompleted ? (isOnTime ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning') :
-                            isLate ? 'bg-danger/10 text-danger' : 'bg-primary/10 text-primary'
-                          }`}>
-                            {isCompleted ? (isOnTime ? 'Completed on time' : 'Completed late') : task.status}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                              isCompleted ? (isOnTime ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning') :
+                              isLate ? 'bg-danger/10 text-danger' : 'bg-primary/10 text-primary'
+                            }`}>
+                              {isCompleted ? (isOnTime ? 'Completed on time' : 'Completed late') : task.status}
+                            </span>
+                            {task.file_path && (
+                              <a href={`http://localhost:5001${task.file_path}`} target="_blank" rel="noreferrer" className="text-primary hover:text-primary-hover transition-colors" title="View Attachment">
+                                <Paperclip className="w-4 h-4" />
+                              </a>
+                            )}
+                          </div>
                         </div>
                         <h4 className="text-sm font-semibold text-ink mb-1">{task.title}</h4>
                         <div className="flex flex-col gap-1 mt-2">
@@ -247,6 +313,45 @@ export default function EmployeeDashboardView({ stats, onRefresh }: EmployeeDash
           </div>
         </div>
       </div>
+
+      <Dialog open={completeModalOpen} onOpenChange={setCompleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Complete Task</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 space-y-4">
+            <p className="text-sm text-ink-muted">
+              You can optionally upload a file as proof of work (PDF, JPG, PNG up to 5MB).
+            </p>
+            <div>
+              <div 
+                {...getRootProps()} 
+                className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                  isDragActive ? 'border-primary bg-primary/5' : 'border-surface-3 hover:border-ink-muted bg-surface-2'
+                }`}
+              >
+                <input {...getInputProps()} />
+                <UploadCloud className="w-8 h-8 mx-auto text-ink-muted mb-2" />
+                {selectedFile ? (
+                  <p className="text-sm font-medium text-ink">{selectedFile.name}</p>
+                ) : (
+                  <div>
+                    <p className="text-sm text-ink font-medium">Drag & drop or click to upload</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button type="button" onClick={() => setCompleteModalOpen(false)} className="btn-secondary">
+                Cancel
+              </button>
+              <button onClick={handleCompleteWithFile} disabled={uploading} className="btn-primary bg-success border-transparent hover:bg-success/90 text-white shadow-sm">
+                {uploading ? 'Completing...' : 'Mark as Completed'}
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

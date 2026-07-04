@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   createColumnHelper,
   flexRender,
@@ -62,6 +62,39 @@ export default function Tasks() {
   const [data, setData] = useState<Task[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Filter States
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [timeFilter, setTimeFilter] = useState('All');
+  const [dateFilter, setDateFilter] = useState('');
+
+  const filteredData = useMemo(() => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    return data.filter(task => {
+      let statusMatch = true;
+      let timeMatch = true;
+      let dateMatch = true;
+      
+      if (statusFilter !== 'All') {
+        statusMatch = task.status === statusFilter;
+      }
+      
+      if (timeFilter === 'Overdue') {
+        timeMatch = task.status === 'Overdue' || new Date(task.due_date) < today;
+      } else if (timeFilter === 'On Time') {
+        timeMatch = task.status !== 'Overdue' && new Date(task.due_date) >= today;
+      }
+
+      if (dateFilter) {
+        const taskDate = new Date(task.due_date).toISOString().split('T')[0];
+        dateMatch = taskDate === dateFilter;
+      }
+      
+      return statusMatch && timeMatch && dateMatch;
+    });
+  }, [data, statusFilter, timeFilter, dateFilter]);
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -216,7 +249,7 @@ export default function Tasks() {
   ];
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -303,6 +336,80 @@ export default function Tasks() {
             Create Task
           </button>
         )}
+      </div>
+
+      {/* Filters Bar */}
+      <div className="glass-card p-4 mb-6 flex flex-col md:flex-row items-start md:items-center gap-6 justify-between rounded-xl">
+        <div className="flex flex-wrap items-center gap-6 w-full">
+          {/* Status Filter */}
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Status</span>
+            <div className="flex bg-surface-2 p-1 rounded-lg border border-hairline">
+              {['All', 'Pending', 'In Progress', 'Completed'].map(s => (
+                <button 
+                  key={s} 
+                  onClick={() => setStatusFilter(s)}
+                  className={`px-3 py-1.5 text-xs rounded-md transition-all ${statusFilter === s ? 'bg-white text-canvas font-bold shadow-sm' : 'text-ink-muted font-medium hover:text-ink hover:bg-surface-3/50'}`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Timing Filter */}
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Timing</span>
+            <div className="flex bg-surface-2 p-1 rounded-lg border border-hairline">
+              {['All', 'On Time', 'Overdue'].map(t => (
+                <button 
+                  key={t} 
+                  onClick={() => setTimeFilter(t)}
+                  className={`px-3 py-1.5 text-xs rounded-md transition-all ${timeFilter === t ? 'bg-white text-canvas font-bold shadow-sm' : 'text-ink-muted font-medium hover:text-ink hover:bg-surface-3/50'}`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Date Filter & Clear All */}
+          <div className="flex items-center gap-4 ml-auto">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Due Date</span>
+              <div className="relative">
+                <input 
+                  type="date" 
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="bg-surface-2 border border-hairline-strong rounded-lg h-9 text-xs pl-9 pr-8 w-[165px] text-ink shadow-sm focus:outline-none focus:border-primary transition-colors [color-scheme:dark]" 
+                />
+                <Calendar className="w-4 h-4 text-ink-muted absolute left-3 top-2.5 pointer-events-none" />
+                {dateFilter && (
+                  <button 
+                    onClick={() => setDateFilter('')}
+                    className="absolute right-2 top-2.5 text-ink-subtle hover:text-ink text-xs font-medium"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {(statusFilter !== 'All' || timeFilter !== 'All' || dateFilter) && (
+              <button 
+                onClick={() => {
+                  setStatusFilter('All');
+                  setTimeFilter('All');
+                  setDateFilter('');
+                }}
+                className="text-xs font-semibold text-danger hover:text-white transition-colors px-3 py-2 bg-danger/10 hover:bg-danger rounded-lg ml-2 whitespace-nowrap shadow-sm"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="surface-1 rounded-xl border border-surface-3 overflow-hidden">

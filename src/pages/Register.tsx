@@ -63,11 +63,13 @@ export default function Register() {
           <div>
             <label className="block text-sm font-medium text-ink-muted mb-1">Email</label>
             <input type="email" {...register('email')} className="input" placeholder="you@company.com" />
+            <p className="text-ink-subtle text-[11px] mt-1.5 leading-tight">Must be a unique email address.</p>
             {errors.email && <p className="text-danger text-xs mt-1">{errors.email.message}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium text-ink-muted mb-1">Password</label>
             <input type="password" {...register('password')} className="input" placeholder="••••••••" />
+            <p className="text-ink-subtle text-[11px] mt-1.5 leading-tight">Must be at least 8 characters, and include 1 uppercase letter, 1 lowercase letter, and 1 number.</p>
             {errors.password && <p className="text-danger text-xs mt-1">{errors.password.message}</p>}
           </div>
           <div>

@@ -42,6 +42,31 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response): Promis
       LIMIT 10
     `);
 
+    // Generate last 7 days chart data for Velocity (Assigned vs Completed)
+    const chartData = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+
+      // Count tasks assigned on this date
+      const [assigned] = await pool.query<RowDataPacket[]>(`
+        SELECT COUNT(*) as count FROM tasks WHERE DATE(created_at) = ?
+      `, [dateStr]);
+
+      // Count tasks completed on this date
+      const [completed] = await pool.query<RowDataPacket[]>(`
+        SELECT COUNT(*) as count FROM tasks WHERE DATE(completed_at) = ? AND status = 'Completed'
+      `, [dateStr]);
+
+      chartData.push({
+        name: dayName,
+        assigned: assigned[0].count,
+        completed: completed[0].count
+      });
+    }
+
     res.json({
       totalEmployees: empCount[0].total,
       totalTasks: taskStats[0].total_tasks || 0,
@@ -51,6 +76,7 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response): Promis
       overdueTasks: taskStats[0].overdue_tasks || 0,
       employeeStats: employeeStats,
       recentTasks: recentTasks,
+      chartData: chartData,
     });
   } catch (error) {
     console.error(error);
@@ -99,7 +125,7 @@ export const getEmployeeDashboard = async (req: AuthRequest, res: Response): Pro
     `, [empId]);
 
     const [tasks] = await pool.query<RowDataPacket[]>(`
-      SELECT id, title, priority, status, start_date, due_date, completed_at
+      SELECT id, title, priority, status, start_date, due_date, completed_at, file_path
       FROM tasks
       WHERE assigned_employee_id = ?
       ORDER BY created_at DESC

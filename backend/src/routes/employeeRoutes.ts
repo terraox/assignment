@@ -1,8 +1,10 @@
 import express from 'express';
-import { getEmployees, createEmployee, updateEmployee, deleteEmployee } from '../controllers/employeeController';
+import { getEmployees, createEmployee, updateEmployee, deleteEmployee, getDepartments } from '../controllers/employeeController';
 import { protect, adminOnly } from '../middlewares/authMiddleware';
 
 const router = express.Router();
+
+router.route('/departments').get(protect, adminOnly, getDepartments);
 
 router.route('/')
   .get(protect, adminOnly, getEmployees)

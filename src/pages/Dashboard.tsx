@@ -15,6 +15,24 @@ import { cn } from '../lib/utils';
 import { format } from 'date-fns';
 import EmployeeDashboardView from '../components/dashboard/EmployeeDashboardView';
 
+function StatCard({ title, value, icon, subtitle, trend }: { title: string, value: number, icon: React.ReactNode, subtitle?: React.ReactNode, trend?: 'up' | 'down' | 'neutral' }) {
+  return (
+    <div className="glass-card group hover:-translate-y-1">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2 text-ink-muted text-sm font-medium tracking-wide uppercase">
+          {icon} {title}
+        </div>
+        {trend === 'up' && <TrendingUp className="w-4 h-4 text-success opacity-0 group-hover:opacity-100 transition-opacity" />}
+        {trend === 'down' && <TrendingUp className="w-4 h-4 text-danger opacity-0 group-hover:opacity-100 transition-opacity rotate-180" />}
+      </div>
+      <div className="text-5xl font-bold text-ink flex items-baseline gap-2">
+        <NumberFlow value={Number(value)} />
+        {subtitle && <span className="text-sm font-normal text-ink-subtle">{subtitle}</span>}
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { user } = useSelector((state: RootState) => state.auth);
   const isAdmin = user?.role === 'Admin';
@@ -66,16 +84,8 @@ export default function Dashboard() {
     );
   }
 
-  // Dummy chart data for visually stunning graphics (would be replaced with real timeseries data)
-  const chartData = [
-    { name: 'Mon', completed: 12, overdue: 2 },
-    { name: 'Tue', completed: 18, overdue: 4 },
-    { name: 'Wed', completed: 15, overdue: 1 },
-    { name: 'Thu', completed: 25, overdue: 3 },
-    { name: 'Fri', completed: 32, overdue: 0 },
-    { name: 'Sat', completed: 28, overdue: 2 },
-    { name: 'Sun', completed: Math.max(Number(stats.completedTasks), 35), overdue: Number(stats.overdueTasks) },
-  ];
+  // Use real data from backend
+  const chartData = stats.chartData || [];
 
   return (
     <div className="relative min-h-full p-6 md:p-10 max-w-[1600px] mx-auto w-full overflow-hidden">
@@ -101,30 +111,17 @@ export default function Dashboard() {
 
         {/* Metric Cards - Spread out with grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8">
-          {isAdmin && (
-            <div className="glass-card group hover:-translate-y-1">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2 text-ink-muted text-sm font-medium tracking-wide uppercase">
-                  <Users className="w-4 h-4 text-primary" /> Employees
-                </div>
-              </div>
-              <div className="text-5xl font-bold text-ink flex items-baseline gap-2">
-                <NumberFlow value={Number(stats.totalEmployees)} />
-                <span className="text-sm font-normal text-ink-subtle">total</span>
-              </div>
-            </div>
-          )}
-          <div className="glass-card group hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2 text-ink-muted text-sm font-medium tracking-wide uppercase">
-                <Briefcase className="w-4 h-4 text-ink" /> Total Tasks
-              </div>
-            </div>
-            <div className="text-5xl font-bold text-ink flex items-baseline gap-2">
-              <NumberFlow value={Number(stats.totalTasks)} />
-              <span className="text-sm font-normal text-ink-subtle">assigned</span>
-            </div>
-          </div>
+          <StatCard 
+            title="Total Employees" 
+            value={stats.totalEmployees} 
+            icon={<Users className="w-4 h-4 text-primary" />} 
+          />
+          <StatCard 
+            title="Total Tasks" 
+            value={stats.totalTasks} 
+            icon={<Briefcase className="w-4 h-4 text-ink" />} 
+            subtitle="assigned"
+          />
           <div className="glass-card group hover:-translate-y-1">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2 text-success text-sm font-medium tracking-wide uppercase">
@@ -143,17 +140,13 @@ export default function Dashboard() {
               />
             </div>
           </div>
-          <div className="glass-card group hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2 text-danger text-sm font-medium tracking-wide uppercase">
-                <AlertCircle className="w-4 h-4" /> Overdue
-              </div>
-            </div>
-            <div className="text-5xl font-bold text-danger flex items-baseline gap-2">
-              <NumberFlow value={Number(stats.overdueTasks)} />
-              <span className="text-sm font-normal text-ink-subtle">late</span>
-            </div>
-          </div>
+          <StatCard 
+            title="Overdue" 
+            value={stats.overdueTasks} 
+            icon={<AlertCircle className="w-4 h-4 text-danger" />} 
+            subtitle="late"
+            trend={stats.overdueTasks > 0 ? "down" : "neutral"}
+          />
         </div>
 
         {/* Charts & Recent Tasks Section */}
@@ -161,13 +154,13 @@ export default function Dashboard() {
           {/* Main Area Chart - Maximized space */}
           <div className="glass-card xl:col-span-2 flex flex-col h-[400px] xl:h-full">
             <div className="flex items-center justify-between mb-8">
-              <h3 className="text-sm font-semibold tracking-wide uppercase text-ink">Velocity & Volume</h3>
+              <h3 className="text-sm font-semibold tracking-wide uppercase text-ink">Weekly Task Velocity</h3>
               <div className="flex items-center gap-4 text-xs font-medium text-ink-muted">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-primary" /> Completed
+                  <span className="w-2 h-2 rounded-full bg-primary" /> Assigned
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-danger" /> Overdue
+                  <span className="w-2 h-2 rounded-full bg-success" /> Completed
                 </div>
               </div>
             </div>
@@ -175,13 +168,13 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
-                    <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="colorAssigned" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.4}/>
                       <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0}/>
                     </linearGradient>
-                    <linearGradient id="colorOverdue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-danger)" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="var(--color-danger)" stopOpacity={0}/>
+                    <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--color-success)" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="var(--color-success)" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-hairline)" />
@@ -191,8 +184,8 @@ export default function Dashboard() {
                     contentStyle={{ backgroundColor: 'rgba(15, 16, 17, 0.8)', backdropFilter: 'blur(8px)', borderColor: 'var(--color-hairline)', borderRadius: '8px', color: 'var(--color-ink)' }}
                     itemStyle={{ color: 'var(--color-ink)' }}
                   />
-                  <Area type="monotone" dataKey="completed" stroke="var(--color-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorCompleted)" />
-                  <Area type="monotone" dataKey="overdue" stroke="var(--color-danger)" strokeWidth={3} fillOpacity={1} fill="url(#colorOverdue)" />
+                  <Area type="monotone" dataKey="assigned" stroke="var(--color-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorAssigned)" />
+                  <Area type="monotone" dataKey="completed" stroke="var(--color-success)" strokeWidth={3} fillOpacity={1} fill="url(#colorCompleted)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

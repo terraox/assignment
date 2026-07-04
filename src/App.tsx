@@ -14,7 +14,8 @@ import NotificationDropdown from './components/NotificationDropdown';
 import { Logo } from './components/ui/Logo';
 import { InteractiveHoverButton } from './components/ui/interactive-hover-button';
 import { ExpandableTabs } from './components/ui/expandable-tabs';
-import { Home, CheckSquare, BarChart2, Users, Target } from 'lucide-react';
+import { RainbowButton } from './components/ui/rainbow-button';
+import { Home, CheckSquare, BarChart2, Users, Target, LogOut } from 'lucide-react';
 
 function Layout({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch();
@@ -42,16 +43,19 @@ function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-canvas flex flex-col">
-      <header className="h-14 border-b border-surface-3 bg-surface-1 flex items-center justify-between px-8 shrink-0">
-        <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2 font-semibold text-ink tracking-tight">
-            <Logo className="w-6 h-6" />
-            <span className="hidden sm:inline">TaskFlow</span>
+      <header className="h-20 border-b border-surface-3/50 bg-surface-1/80 backdrop-blur-xl sticky top-0 z-50 flex items-center justify-between px-8 sm:px-12 shrink-0 shadow-sm">
+        <div className="flex items-center gap-8">
+          <Link to="/" className="flex items-center gap-3 font-bold text-ink tracking-tight hover:opacity-80 transition-opacity">
+            <div className="p-1.5 bg-primary/10 rounded-xl">
+              <Logo className="w-7 h-7 text-primary" />
+            </div>
+            <span className="hidden sm:inline text-xl">TaskFlow</span>
           </Link>
+          <div className="h-6 w-px bg-surface-3 hidden md:block" />
           <div className="flex items-center gap-2">
             <ExpandableTabs 
               tabs={navTabs as any}
-              className="border-surface-3 bg-surface-2"
+              className="border-surface-3 bg-surface-2/50 shadow-sm"
               activeColor="text-primary"
               selectedIndex={selectedIndex}
               onChange={(index) => {
@@ -60,17 +64,28 @@ function Layout({ children }: { children: React.ReactNode }) {
             />
           </div>
         </div>
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-6 text-sm">
           <NotificationDropdown />
           {user && (
-            <div className="hidden sm:flex items-center gap-2 text-ink-muted">
-              <span>{user.name}</span>
-              <span className="text-[11px] font-medium bg-surface-3 px-2 py-0.5 rounded-full text-ink uppercase tracking-wider">{user.role}</span>
+            <div className="hidden sm:flex items-center pl-4 border-l border-surface-3">
+              <RainbowButton className="h-10 px-5 text-sm cursor-default hover:opacity-100">
+                <span className="font-semibold text-canvas">{user.name}</span>
+                <span className="mx-2 text-canvas/20">|</span>
+                <span className="text-[11px] font-bold text-primary-focus uppercase tracking-widest">{user.role}</span>
+              </RainbowButton>
             </div>
           )}
-          <InteractiveHoverButton onClick={handleLogout}>
-            Logout
-          </InteractiveHoverButton>
+          <div className="pl-2">
+            <button 
+              onClick={handleLogout}
+              className="group bg-white hover:bg-danger text-canvas hover:text-white px-5 py-2 text-sm font-semibold rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2 focus-visible:ring-offset-canvas shadow-sm flex items-center overflow-hidden"
+            >
+              <span>Logout</span>
+              <div className="w-0 opacity-0 -translate-x-2 group-hover:w-4 group-hover:opacity-100 group-hover:translate-x-0 group-hover:ml-1.5 transition-all duration-300 flex items-center justify-center">
+                <LogOut className="w-4 h-4" />
+              </div>
+            </button>
+          </div>
         </div>
       </header>
       <main className="flex-1 overflow-auto">

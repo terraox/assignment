@@ -147,13 +147,17 @@ export const updateTask = async (req: AuthRequest, res: Response): Promise<void>
       await TaskModel.update(id, allowedData);
 
       if (allowedData.status === 'Completed' && task.status !== 'Completed') {
+        // Fetch user name since it's not in the JWT token
+        const [users] = await pool.query<RowDataPacket[]>('SELECT name FROM users WHERE id = ?', [req.user?.id]);
+        const employeeName = users[0]?.name || 'Employee';
+
         // Notify admin that task is completed
         // For simplicity, we just find all admins and notify them
         const [admins] = await pool.query<RowDataPacket[]>('SELECT id FROM users WHERE role = "Admin"');
         for (const admin of admins) {
           await NotificationModel.create({
             user_id: admin.id,
-            message: `Task completed: ${task.title} by ${req.user?.name}`,
+            message: `Task completed: ${task.title} by ${employeeName}`,
             type: 'completion',
             is_read: false
           });
