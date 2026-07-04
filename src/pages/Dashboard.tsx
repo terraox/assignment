@@ -13,6 +13,7 @@ import {
 import * as Progress from '@radix-ui/react-progress';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';
+import EmployeeDashboardView from '../components/dashboard/EmployeeDashboardView';
 
 export default function Dashboard() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -20,18 +21,19 @@ export default function Dashboard() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchStats = async () => {
+    try {
+      const endpoint = isAdmin ? '/dashboard/admin' : '/dashboard/employee';
+      const res = await api.get(endpoint);
+      setStats(res.data);
+    } catch (error) {
+      console.error('Failed to fetch dashboard stats', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const endpoint = isAdmin ? '/dashboard/admin' : '/dashboard/employee';
-        const res = await api.get(endpoint);
-        setStats(res.data);
-      } catch (error) {
-        console.error('Failed to fetch dashboard stats', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchStats();
   }, [isAdmin]);
 
@@ -49,6 +51,20 @@ export default function Dashboard() {
   }
 
   if (!stats) return null;
+
+  // Render Employee specific view
+  if (!isAdmin) {
+    return (
+      <div className="relative min-h-full p-6 md:p-10 max-w-[1600px] mx-auto w-full overflow-hidden">
+        {/* Background Glowing Orbs */}
+        <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] pointer-events-none opacity-50" />
+        
+        <div className="relative z-10">
+          <EmployeeDashboardView stats={stats} onRefresh={fetchStats} />
+        </div>
+      </div>
+    );
+  }
 
   // Dummy chart data for visually stunning graphics (would be replaced with real timeseries data)
   const chartData = [

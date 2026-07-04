@@ -14,9 +14,28 @@ const createTaskSchema = z.object({
   start_date: z.string(), // YYYY-MM-DD expected
   due_date: z.string(),
   assigned_employee_id: z.string().transform(v => v ? parseInt(v) : null).nullable().optional(),
+}).refine(data => new Date(data.start_date) <= new Date(data.due_date), {
+  message: "Due Date must not be earlier than Start Date",
+  path: ["due_date"]
 });
 
-const updateTaskSchema = createTaskSchema.partial();
+const updateTaskSchema = z.object({
+  title: z.string().min(1).optional(),
+  description: z.string().optional(),
+  priority: z.enum(['Low', 'Medium', 'High']).optional(),
+  status: z.enum(['Pending', 'In Progress', 'Completed', 'Overdue']).optional(),
+  start_date: z.string().optional(),
+  due_date: z.string().optional(),
+  assigned_employee_id: z.union([z.string(), z.number()]).transform(v => v ? parseInt(v.toString()) : null).nullable().optional(),
+}).refine(data => {
+  if (data.start_date && data.due_date) {
+    return new Date(data.start_date) <= new Date(data.due_date);
+  }
+  return true;
+}, {
+  message: "Due Date must not be earlier than Start Date",
+  path: ["due_date"]
+});
 
 const getUserIdByEmployeeId = async (empId: number): Promise<number | null> => {
   const [rows] = await pool.query<RowDataPacket[]>('SELECT user_id FROM employees WHERE id = ?', [empId]);
@@ -103,7 +122,7 @@ export const updateTask = async (req: AuthRequest, res: Response): Promise<void>
     }
 
     // Business Rule: Completed tasks cannot be edited
-    if (task.status === 'Completed' && userRole !== 'Admin') {
+    if (task.status === 'Completed') {
       res.status(403).json({ message: 'Completed tasks cannot be edited' });
       return;
     }

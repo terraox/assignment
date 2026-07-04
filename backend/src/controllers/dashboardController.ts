@@ -74,9 +74,18 @@ export const getEmployeeDashboard = async (req: AuthRequest, res: Response): Pro
         pendingTasks: 0,
         inProgressTasks: 0,
         overdueTasks: 0,
+        tasks: [],
+        employee: null
       });
       return;
     }
+
+    const [employeeInfo] = await pool.query<RowDataPacket[]>(`
+      SELECT u.name, u.email, e.department, e.designation
+      FROM employees e
+      JOIN users u ON e.user_id = u.id
+      WHERE e.id = ?
+    `, [empId]);
 
     const [taskStats] = await pool.query<RowDataPacket[]>(`
       SELECT 
@@ -89,21 +98,21 @@ export const getEmployeeDashboard = async (req: AuthRequest, res: Response): Pro
       WHERE assigned_employee_id = ?
     `, [empId]);
 
-    const [recentTasks] = await pool.query<RowDataPacket[]>(`
-      SELECT id, title, status, due_date, completed_at
+    const [tasks] = await pool.query<RowDataPacket[]>(`
+      SELECT id, title, priority, status, start_date, due_date, completed_at
       FROM tasks
       WHERE assigned_employee_id = ?
       ORDER BY created_at DESC
-      LIMIT 10
     `, [empId]);
 
     res.json({
+      employee: employeeInfo[0],
       totalTasks: taskStats[0].total_tasks || 0,
       completedTasks: taskStats[0].completed_tasks || 0,
       pendingTasks: taskStats[0].pending_tasks || 0,
       inProgressTasks: taskStats[0].in_progress_tasks || 0,
       overdueTasks: taskStats[0].overdue_tasks || 0,
-      recentTasks: recentTasks,
+      tasks: tasks,
     });
   } catch (error) {
     console.error(error);

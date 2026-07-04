@@ -186,7 +186,7 @@ export default function Tasks() {
       header: 'Actions',
       cell: (props) => {
         const isCompleted = props.row.original.status === 'Completed';
-        const canEdit = isAdmin || !isCompleted;
+        const canEdit = !isCompleted; // Business Rule: Completed tasks cannot be edited
 
         return (
           <div className="flex gap-2">
