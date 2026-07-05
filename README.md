@@ -12,48 +12,13 @@ Built with **React (Vite), TypeScript, Tailwind CSS, and Shadcn UI** on the fron
 
 The diagram below illustrates the high-level flow of data and requests through the TaskFlow system.
 
-```mermaid
-graph TB
-    subgraph Client_Layer ["Client Layer"]
-        User["User (Admin / Employee)"]
-    end
+![Application Architecture](./public/flow.png "TaskFlow Architecture Flow")
 
-    subgraph Presentation_Layer ["Presentation Layer"]
-        UI["React Frontend (Vite, Tailwind, Shadcn)"]
-    end
-
-    subgraph Application_Layer ["Application Layer (Node.js + Express)"]
-        Router["API Router & Auth Middleware"]
-        subgraph Controllers ["Controllers"]
-            AuthCtrl["Auth Controller"]
-            TaskCtrl["Task Controller"]
-            EmpCtrl["Employee Controller"]
-            RepCtrl["Report Controller"]
-        end
-    end
-
-    subgraph Data_Layer ["Data Layer"]
-        DB[("MySQL Database")]
-    end
-
-    User -->|Interacts via Browser| UI
-    UI -->|REST API (JSON & Multipart)| Router
-    Router --> AuthCtrl
-    Router --> TaskCtrl
-    Router --> EmpCtrl
-    Router --> RepCtrl
-    
-    AuthCtrl -->|SQL Queries| DB
-    TaskCtrl -->|SQL Queries| DB
-    EmpCtrl -->|SQL Queries| DB
-    RepCtrl -->|SQL Queries| DB
-
-    classDef layerStyle fill:#f8f9fa,stroke:#d1d5db,stroke-width:2px,color:#1f2937,stroke-dasharray: 5 5
-    class Client_Layer,Presentation_Layer,Application_Layer,Data_Layer layerStyle
-    
-    classDef nodeStyle fill:#ffffff,stroke:#9ca3af,stroke-width:2px,color:#111827
-    class User,UI,Router,AuthCtrl,TaskCtrl,EmpCtrl,RepCtrl,DB nodeStyle
-```
+The architecture follows a strict 4-tier model:
+- **Client Layer:** Users (Admins and Employees) interact with the system via their web browsers.
+- **Presentation Layer:** The Vite/React frontend serves as the UI, rendering Shadcn components and making JSON & Multipart API calls to the backend.
+- **Application Layer:** The Node.js and Express backend receives these API calls. Requests first pass through an Auth Middleware for JWT validation. If authorized, the router forwards the request to the appropriate Controller (Auth, Task, Employee, or Report) to process business logic.
+- **Data Layer:** The Controllers execute optimized SQL queries against the MySQL Database to fetch or mutate data, which is then sent back up the chain to the client.
 
 ---
 
