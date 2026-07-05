@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import pool from './config/db';
+import { setupSwagger } from './config/swagger';
 import authRoutes from './routes/authRoutes';
 import employeeRoutes from './routes/employeeRoutes';
 import taskRoutes from './routes/taskRoutes';
@@ -13,6 +15,9 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5001;
+
+// Setup Swagger API Documentation
+setupSwagger(app);
 
 app.use(cors());
 app.use(express.json());

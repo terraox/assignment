@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmployeeModel = void 0;
 const db_1 = __importDefault(require("../config/db"));
-const mysql2_1 = require("mysql2");
 class EmployeeModel {
     static async findAll(options = {}) {
         const { search = '', sortBy = 'e.id', sortOrder = 'DESC', page = 1, limit = 10, department } = options;

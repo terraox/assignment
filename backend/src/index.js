@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const db_1 = __importDefault(require("./config/db"));
+const swagger_1 = require("./config/swagger");
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const employeeRoutes_1 = __importDefault(require("./routes/employeeRoutes"));
 const taskRoutes_1 = __importDefault(require("./routes/taskRoutes"));
@@ -16,6 +17,8 @@ const notificationRoutes_1 = __importDefault(require("./routes/notificationRoute
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT || 5001;
+// Setup Swagger API Documentation
+(0, swagger_1.setupSwagger)(app);
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 // Serve uploaded files statically
@@ -38,7 +41,6 @@ app.get('/api/health', async (req, res) => {
 });
 const node_cron_1 = __importDefault(require("node-cron"));
 const Notification_1 = require("./models/Notification");
-const mysql2_1 = require("mysql2");
 // Schedule job to run daily at 9:00 AM to check for tasks due tomorrow
 node_cron_1.default.schedule('0 9 * * *', async () => {
     try {

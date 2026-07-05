@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TaskModel = void 0;
 const db_1 = __importDefault(require("../config/db"));
-const mysql2_1 = require("mysql2");
 class TaskModel {
     static async findAll(options = {}) {
         let query = `

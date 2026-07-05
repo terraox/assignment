@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationModel = void 0;
 const db_1 = __importDefault(require("../config/db"));
-const mysql2_1 = require("mysql2");
 class NotificationModel {
     static async findAllByUserId(userId) {
         const [rows] = await db_1.default.query('SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50', [userId]);

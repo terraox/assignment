@@ -4,7 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteEmployee = exports.updateEmployee = exports.createEmployee = exports.getDepartments = exports.getEmployees = void 0;
-const express_1 = require("express");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const zod_1 = require("zod");
 const User_1 = require("../models/User");

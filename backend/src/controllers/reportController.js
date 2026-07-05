@@ -4,10 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.exportTasks = void 0;
-const express_1 = require("express");
-const authMiddleware_1 = require("../middlewares/authMiddleware");
 const db_1 = __importDefault(require("../config/db"));
-const mysql2_1 = require("mysql2");
 const exceljs_1 = __importDefault(require("exceljs"));
 const json2csv_1 = require("json2csv");
 const Task_1 = require("../models/Task");

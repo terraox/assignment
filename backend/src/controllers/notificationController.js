@@ -1,8 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.markAllAsRead = exports.markAsRead = exports.getNotifications = void 0;
-const express_1 = require("express");
-const authMiddleware_1 = require("../middlewares/authMiddleware");
 const Notification_1 = require("../models/Notification");
 const getNotifications = async (req, res) => {
     try {

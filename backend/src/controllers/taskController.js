@@ -4,13 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteTask = exports.updateTask = exports.createTask = exports.getTasks = void 0;
-const express_1 = require("express");
 const zod_1 = require("zod");
 const Task_1 = require("../models/Task");
 const Notification_1 = require("../models/Notification");
-const authMiddleware_1 = require("../middlewares/authMiddleware");
 const db_1 = __importDefault(require("../config/db"));
-const mysql2_1 = require("mysql2");
 const createTaskSchema = zod_1.z.object({
     title: zod_1.z.string().min(1, 'Title is required'),
     description: zod_1.z.string().optional(),
