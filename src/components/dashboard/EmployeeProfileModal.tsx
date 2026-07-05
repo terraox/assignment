@@ -71,10 +71,19 @@ export default function EmployeeProfileModal({ employeeId, isOpen, onClose }: Em
                     <Dialog.Title className="text-2xl font-bold text-ink tracking-tight mb-1">
                       {data.employee.name}
                     </Dialog.Title>
-                    <div className="flex items-center gap-4 text-sm text-ink-subtle">
-                      <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" /> {data.employee.email}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-3">
+                      <div className="flex w-fit items-center gap-2 bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-full shadow-sm transition-all hover:bg-primary/20">
+                        <Mail className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-sm font-medium text-primary-hover">{data.employee.email}</span>
+                      </div>
                       {data.employee.department && (
-                        <span className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> {data.employee.designation} ({data.employee.department})</span>
+                        <div className="flex w-fit items-center gap-2 bg-surface-2 border border-surface-3 px-3 py-1.5 rounded-full shadow-sm transition-all hover:bg-surface-3">
+                          <Briefcase className="w-3.5 h-3.5 text-ink-muted" />
+                          <span className="text-sm font-medium text-ink-subtle">
+                            <span className="text-ink">{data.employee.designation}</span>
+                            <span className="opacity-60 ml-1">({data.employee.department})</span>
+                          </span>
+                        </div>
                       )}
                     </div>
                   </div>

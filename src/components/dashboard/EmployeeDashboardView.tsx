@@ -118,14 +118,19 @@ export default function EmployeeDashboardView({ stats, onRefresh }: EmployeeDash
             <h1 className="text-3xl font-bold text-ink tracking-tight mb-2">
               {stats.employee.name}
             </h1>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-ink-subtle">
-              <span className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-primary" /> {stats.employee.email}
-              </span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-3">
+              <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-full shadow-sm transition-all hover:bg-primary/20">
+                <Mail className="w-3.5 h-3.5 text-primary" />
+                <span className="text-sm font-medium text-primary-hover">{stats.employee.email}</span>
+              </div>
               {stats.employee.department && (
-                <span className="flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-primary" /> {stats.employee.designation} ({stats.employee.department})
-                </span>
+                <div className="flex items-center gap-2 bg-surface-2 border border-surface-3 px-3 py-1.5 rounded-full shadow-sm transition-all hover:bg-surface-3">
+                  <Briefcase className="w-3.5 h-3.5 text-ink-muted" />
+                  <span className="text-sm font-medium text-ink-subtle">
+                    <span className="text-ink">{stats.employee.designation}</span>
+                    <span className="opacity-60 ml-1">({stats.employee.department})</span>
+                  </span>
+                </div>
               )}
             </div>
           </div>

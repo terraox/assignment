@@ -5,7 +5,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Edit2, Trash2, Plus, Calendar, Paperclip, UploadCloud } from 'lucide-react';
+import { Edit2, Trash2, Plus, Calendar, Paperclip, UploadCloud, ChevronDown } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -479,21 +479,27 @@ export default function Tasks() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-ink-muted mb-1">Status</label>
-                <select {...register('status')} className="input">
-                  <option value="Pending">Pending</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Overdue" disabled={!isAdmin}>Overdue</option>
-                </select>
+                <div className="relative">
+                  <select {...register('status')} className="input appearance-none pr-10">
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Overdue" disabled={!isAdmin}>Overdue</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none" />
+                </div>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-ink-muted mb-1">Priority</label>
-                <select {...register('priority')} className="input" disabled={!isAdmin}>
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
+                <div className="relative">
+                  <select {...register('priority')} className="input appearance-none pr-10" disabled={!isAdmin}>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none" />
+                </div>
               </div>
             </div>
 
@@ -512,12 +518,15 @@ export default function Tasks() {
             {isAdmin && (
               <div>
                 <label className="block text-sm font-medium text-ink-muted mb-1">Assign To</label>
-                <select {...register('assigned_employee_id')} className="input">
-                  <option value="">Unassigned</option>
-                  {employees.map(emp => (
-                    <option key={emp.id} value={emp.id}>{emp.name}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select {...register('assigned_employee_id')} className="input appearance-none pr-10">
+                    <option value="">Unassigned</option>
+                    {employees.map(emp => (
+                      <option key={emp.id} value={emp.id}>{emp.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none" />
+                </div>
               </div>
             )}
 

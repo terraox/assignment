@@ -36,6 +36,37 @@ app.get('/api/health', async (req, res) => {
     res.status(500).json({ status: 'error', message: 'DB connection failed' });
   }
 });
+import cron from 'node-cron';
+import { NotificationModel } from './models/Notification';
+import { RowDataPacket } from 'mysql2';
+
+// Schedule job to run daily at 9:00 AM to check for tasks due tomorrow
+cron.schedule('0 9 * * *', async () => {
+  try {
+    console.log('Running daily check for tasks due tomorrow...');
+    const [tasks] = await pool.query<RowDataPacket[]>(`
+      SELECT t.id, t.title, t.assigned_employee_id, e.user_id 
+      FROM tasks t
+      JOIN employees e ON t.assigned_employee_id = e.id
+      WHERE t.status != 'Completed' 
+      AND DATE(t.due_date) = DATE(DATE_ADD(NOW(), INTERVAL 1 DAY))
+    `);
+
+    for (const task of tasks) {
+      if (task.user_id) {
+        await NotificationModel.create({
+          user_id: task.user_id,
+          message: `Reminder: Your task "${task.title}" is due tomorrow!`,
+          type: 'reminder',
+          is_read: false
+        });
+      }
+    }
+    console.log(`Sent reminders for ${tasks.length} tasks.`);
+  } catch (error) {
+    console.error('Error in cron job', error);
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
